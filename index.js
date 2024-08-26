@@ -287,8 +287,8 @@ function getNoise(x, y){
   dist = dist*2;
   dist = Math.max(Math.min(dist,1),0);
 
-  let fx = x/10.0;
-  let fy = y/10.0;
+  let fx = x/7.0;
+  let fy = y/7.0;
   //fx+=2500;
   //fy+=2500;
   let ret = 0;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grille Hexagonale en 3D - Three.js avec OrbitControls</title>
+    <title>Island</title>
     <style>
         body { margin: 0; }
         canvas { display: block; }
@@ -60,8 +60,8 @@
         		if (this.background == "rock") {color = "rgb(100,100,100)";}
         		if (this.background == "snow") {color = "rgb(230,255,255)";}
         		if (this.background == "forest") {color = "rgb(0,127,0)";}
-				ctx.strokeStyle = "rgb(127,127,127)";  // Une couleur plus sombre
-				ctx.lineWidth = 1;
+				ctx.strokeStyle = "rgb(0,0,0)";  // Une couleur plus sombre
+				ctx.lineWidth = 3;
 				ctx.fillStyle = color;  // Une couleur plus sombre
 			    ctx.beginPath();
 			    ctx.moveTo(this.texPoints[1].x*canvas.width, (1-this.texPoints[1].y)*canvas.height);
@@ -78,7 +78,7 @@
 			    		let i2 = i == 5 ? 1 : i+2;
 			    		let x = ( this.texPoints[i1].x + this.texPoints[i2].x ) / 2;
 			    		let y = ( this.texPoints[i1].y + this.texPoints[i2].y ) / 2;
-						ctx.lineWidth = this.waterFlow[i];
+						ctx.lineWidth = 2+(this.waterFlow[i]/2);
 					    ctx.beginPath();
 					    ctx.moveTo(this.texPoints[0].x*canvas.width, (1-this.texPoints[0].y)*canvas.height);
 					    ctx.lineTo(x*canvas.width, (1-y)*canvas.height);
@@ -91,12 +91,17 @@
 
         // Initialisation de la scène, de la caméra et du rendu
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
         const cases = {};
+
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(-1.5, 1, 0);
+        light.castShadows = true;
+        scene.add(light);
 
         // Positionnement de la caméra
         camera.position.x = 0;
@@ -133,12 +138,10 @@
 			//canvas.width = 200;
 			//canvas.height = 50;
 			const ctx = canvas.getContext('2d');
-
+			ctx.lineCap = "round";
 
 	        // Ajout d'une lumière directionnelle
-	        const light = new THREE.DirectionalLight(0xffffff, 1);
-	        light.position.set(0, 1, 1).normalize();
-	        scene.add(light);
+
 
 			const ground = [];
 			const texGround = [];
@@ -152,7 +155,7 @@
 			        c.background = d.background;
 			        c.waterFlow = d.waterFlow;
 			        for (let i = 0; i< c.points.length; i++) {
-			        	d.points[i] = new THREE.Vector3(c.points[i].x, c.points[i].z*10, c.points[i].y);
+			        	d.points[i] = new THREE.Vector3(c.points[i].x, c.points[i].z*8, c.points[i].y);
 			        }
 			        c.calcPoints(rows, cols);
 			        c.addTriangles(ground, texGround);
@@ -165,18 +168,29 @@
 			//document.body.appendChild(canvas);
 
 			// 3. Créer un matériau à partir de la texture
-			const grassMaterial = new THREE.MeshBasicMaterial({
+			const texMaterial = new THREE.MeshStandardMaterial({
 			    map: texture,
+			    roughness :1,
+			    metalness :0,
 			    side: THREE.DoubleSide  // Afficher les deux faces
 			});
 
 			// 4. Remplacer le matériau "grass" existant par ce nouveau matériau
-			const mat = grassMaterial;
+			const material = new THREE.MeshStandardMaterial( { color: 0xffffFF, side: THREE.DoubleSide } ); 
+			const mat = texMaterial;
 			const t = new THREE.BufferGeometry().setFromPoints(ground);
 			t.setAttribute('uv', new THREE.Float32BufferAttribute(texGround.flat(), 2));
+			t.computeVertexNormals();
+
 	        const m = new THREE.Mesh(t, mat);
 	        scene.add(m);
 
+	        camera.position.x = 0.8660254037844386*cols/2;
+	        camera.position.y = 20;
+	        camera.position.z = 0.8660254037844386*rows/2;
+	        controls.target.x = 0.8660254037844386*cols/2;
+	        controls.target.y = 0;
+	        controls.target.z = 0.8660254037844386*rows/2;
 
 		}
 
