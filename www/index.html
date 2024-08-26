@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grille Hexagonale en 3D - Three.js avec OrbitControls</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.128.0/build/three.module.js';
+        import { OrbitControls } from 'https://cdn.skypack.dev/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+
+        class Case {
+        	constructor(x, y, z, rows, cols) {
+        		this.points = [];
+        		this.texPoints = [];
+        		this.waterFlow = [];
+        		this.x = x;
+        		this.y = y;
+        		this.z = z*10;
+
+        		if (!cases[x]) cases[x] = {};
+        		cases[x][y] = this;
+        		this.background = "sea";
+
+        	}
+
+
+			calcPoints(rows, cols) {
+				for (let i = 0; i< this.points.length; i++) {
+	        		this.texPoints.push(new THREE.Vector2((this.points[i].x+0.5)/cols, (this.points[i].z+0.5)/rows));
+				}
+			}
+
+        	addTriangles(buffer, texBuffer) {
+        		for (let i = 1; i< this.points.length; i++) {
+        			let index2 = i+1;
+        			index2 = index2 == this.points.length ? 1 : index2
+        			buffer.push(this.points[0]);
+        			buffer.push(this.points[i]);
+        			buffer.push(this.points[index2]);
+        			texBuffer.push(this.texPoints[0].x);
+        			texBuffer.push(this.texPoints[0].y);
+        			texBuffer.push(this.texPoints[i].x);
+        			texBuffer.push(this.texPoints[i].y);
+        			texBuffer.push(this.texPoints[index2].x);
+        			texBuffer.push(this.texPoints[index2].y);
+        		}
+        	}
+
+        	drawTexture(ctx) {
+        		let color = "rgb(0,255,0)";
+        		if (this.background == "sea") {color = "rgb(50,150,200)";}
+        		if (this.background == "sand") {color = "rgb(255,241,64)";}
+        		if (this.background == "grass") {color = "rgb(120,193,65)";}
+        		if (this.background == "rock") {color = "rgb(100,100,100)";}
+        		if (this.background == "snow") {color = "rgb(230,255,255)";}
+				ctx.strokeStyle = "rgb(127,127,127)";  // Une couleur plus sombre
+				ctx.lineWidth = 1;
+				ctx.fillStyle = color;  // Une couleur plus sombre
+			    ctx.beginPath();
+			    ctx.moveTo(this.texPoints[1].x*canvas.width, (1-this.texPoints[1].y)*canvas.height);
+				for (let i = 2; i < this.texPoints.length; i++) {
+					ctx.lineTo(this.texPoints[i].x*canvas.width, (1-this.texPoints[i].y)*canvas.height);
+				}
+			    ctx.stroke();
+			    ctx.fill();
+
+				ctx.strokeStyle = "rgb(0,0,255)";  // Une couleur plus sombre
+			    for (let i = 0; i< 6; i++) {
+			    	if (this.waterFlow[i]>0) {
+			    		let i1 = i+1;
+			    		let i2 = i == 5 ? 1 : i+2;
+			    		let x = ( this.texPoints[i1].x + this.texPoints[i2].x ) / 2;
+			    		let y = ( this.texPoints[i1].y + this.texPoints[i2].y ) / 2;
+						ctx.lineWidth = this.waterFlow[i];
+					    ctx.beginPath();
+					    ctx.moveTo(this.texPoints[0].x*canvas.width, (1-this.texPoints[0].y)*canvas.height);
+					    ctx.lineTo(x*canvas.width, (1-y)*canvas.height);
+					    ctx.stroke();
+			    	}
+			    }
+
+        	}
+        }
+
+        // Initialisation de la scène, de la caméra et du rendu
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const cases = {};
+
+        // Positionnement de la caméra
+        camera.position.x = 0;
+        camera.position.y = 20;
+        camera.position.z = 0;
+
+        // Ajout d'OrbitControls pour permettre le mouvement de la caméra avec la souris
+        const controls = new OrbitControls(camera, renderer.domElement);
+
+        // Animation de la scène
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();  // Mettre à jour les contrôles à chaque frame
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Ajuster la taille du rendu en cas de redimensionnement de la fenêtre
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+
+		const canvas = document.createElement('canvas');
+
+		function init_data(data) {
+	        let rows = data.rows;  // Nombre de rangées
+	        let cols = data.cols;  // Nombre de colonnes
+
+			canvas.width = 50*cols;  // Vous pouvez ajuster la taille
+			canvas.height = 50*rows;
+			//canvas.width = 200;
+			//canvas.height = 50;
+			const ctx = canvas.getContext('2d');
+
+
+	        // Ajout d'une lumière directionnelle
+	        const light = new THREE.DirectionalLight(0xffffff, 1);
+	        light.position.set(0, 1, 1).normalize();
+	        scene.add(light);
+
+			const ground = [];
+			const texGround = [];
+	        for (let row = 0; row < rows; row++) {
+	            for (let col = 0; col < cols; col++) {
+			        let d = data.cases[col][row];
+	            	let c = new Case(col, row, d.z, rows, cols);
+			        cases[row][col] = c;
+			        
+			        c.points = d.points;
+			        c.background = d.background;
+			        c.waterFlow = d.waterFlow;
+			        for (let i = 0; i< c.points.length; i++) {
+			        	d.points[i] = new THREE.Vector3(c.points[i].x, c.points[i].z*10, c.points[i].y);
+			        }
+			        c.calcPoints(rows, cols);
+			        c.addTriangles(ground, texGround);
+			        c.drawTexture(ctx);
+	            }
+	        }
+
+			const texture = new THREE.CanvasTexture(canvas);
+
+			//document.body.appendChild(canvas);
+
+			// 3. Créer un matériau à partir de la texture
+			const grassMaterial = new THREE.MeshBasicMaterial({
+			    map: texture,
+			    side: THREE.DoubleSide  // Afficher les deux faces
+			});
+
+			// 4. Remplacer le matériau "grass" existant par ce nouveau matériau
+			const mat = grassMaterial;
+			const t = new THREE.BufferGeometry().setFromPoints(ground);
+			t.setAttribute('uv', new THREE.Float32BufferAttribute(texGround.flat(), 2));
+	        const m = new THREE.Mesh(t, mat);
+	        scene.add(m);
+
+
+		}
+
+
+
+		const socket = new WebSocket('ws://127.0.0.1:8080');
+
+		// Fonction qui s'exécute lorsque la connexion est ouverte
+		socket.onopen = function(event) {
+		    console.log('Connexion ouverte : ', event);
+		    
+		    // Envoie un message au serveur une fois la connexion établie
+		    //socket.send('Hello Server!');
+		};
+
+		// Fonction qui s'exécute lorsque le client reçoit un message du serveur
+		socket.onmessage = function(event) {
+		    console.log('Message reçu du serveur : ', event.data);
+		    let msg = JSON.parse(event.data);
+		    if (msg.cmd == "cases") {
+		    	init_data(msg.data);
+		    }
+		    // Traite le message reçu
+		    // Par exemple, afficher le message
+		};
+
+		// Fonction qui s'exécute en cas d'erreur
+		socket.onerror = function(error) {
+		    console.error('Erreur WebSocket : ', error);
+		};
+
+		// Fonction qui s'exécute lorsque la connexion est fermée
+		socket.onclose = function(event) {
+		    console.log('Connexion fermée : ', event);
+		};
+
+		// Fonction pour envoyer un message au serveur
+		function sendMessage(message) {
+		    if (socket.readyState === WebSocket.OPEN) {
+		        socket.send(message);
+		        console.log('Message envoyé au serveur : ', message);
+		    } else {
+		        console.error('La connexion WebSocket n\'est pas ouverte.');
+		    }
+		}
+
+
+
+
+    </script>
+</body>
+</html>
