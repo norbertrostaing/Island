@@ -98,10 +98,14 @@
 
         const cases = {};
 
-        const light = new THREE.DirectionalLight(0xffffff, 1);
-        light.position.set(-1.5, 1, 0);
-        light.castShadows = true;
-        scene.add(light);
+        const sunlight = new THREE.DirectionalLight(0xffffff, 1);
+        sunlight.position.set(0, 1, 0);
+        sunlight.castShadows = true;
+        scene.add(sunlight);
+        const moonlight = new THREE.DirectionalLight(0x88bbff, 0.4);
+        moonlight.position.set(0, 1, 0);
+        moonlight.castShadows = true;
+        scene.add(moonlight);
 
         // Positionnement de la caméra
         camera.position.x = 0;
@@ -110,10 +114,13 @@
 
         // Ajout d'OrbitControls pour permettre le mouvement de la caméra avec la souris
         const controls = new OrbitControls(camera, renderer.domElement);
-
+        var hour = 0;
         // Animation de la scène
         function animate() {
             requestAnimationFrame(animate);
+            sunlight.position.set(Math.sin(hour), Math.cos(hour), 0);
+            moonlight.position.set(Math.sin(hour+Math.PI), Math.cos(hour+Math.PI), 0);
+            hour += 0.0005;
             controls.update();  // Mettre à jour les contrôles à chaque frame
             renderer.render(scene, camera);
         }
