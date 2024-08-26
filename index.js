@@ -133,6 +133,9 @@ function initMap() {
 
     for (let x = 0; x < cols; x++) {
         for (let y = 0; y < rows; y++) {
+            if (cases[x][y].z < 0.55 && cases[x][y].z > 0.2 && !cases[x][y].isSea && perlin.get(x/10.0, y/10.0) > 0.55) {
+                cases[x][y].isForest = true;    
+            }
             cases[x][y].calcPoints();
         }
     }
