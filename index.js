@@ -337,6 +337,7 @@ function getCasesData() {
             c.z = cases[x][y].z;
             c.points = cases[x][y].points;
             c.waterFlow = cases[x][y].waterFlow;
+            c.waterFlowOut = cases[x][y].waterFlowOut;
             c.background = cases[x][y].background;
             ret.cases[x][y] = c;
         }

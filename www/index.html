@@ -52,39 +52,62 @@
         		}
         	}
 
-        	drawTexture(ctx) {
+        	drawTexture(ctx, ctxMet) {
         		let color = "rgb(0,255,0)";
-        		if (this.background == "sea") {color = "rgb(50,150,200)";}
+        		let colorMet = "rgb(0,255,127)";
+        		if (this.background == "sea") {color = "rgb(50,150,200)"; colorMet = "rgb(0,75,230)";}
         		if (this.background == "sand") {color = "rgb(255,241,64)";}
         		if (this.background == "grass") {color = "rgb(120,193,65)";}
         		if (this.background == "rock") {color = "rgb(100,100,100)";}
-        		if (this.background == "snow") {color = "rgb(230,255,255)";}
+        		if (this.background == "snow") {color = "rgb(230,255,255)";colorMet = "rgb(0,192,230)";}
         		if (this.background == "forest") {color = "rgb(0,127,0)";}
 				ctx.strokeStyle = "rgb(0,0,0)";  // Une couleur plus sombre
 				ctx.lineWidth = 3;
 				ctx.fillStyle = color;  // Une couleur plus sombre
 			    ctx.beginPath();
-			    ctx.moveTo(this.texPoints[1].x*canvas.width, (1-this.texPoints[1].y)*canvas.height);
+			    ctx.moveTo(this.texPoints[1].x*canvasTex.width, (1-this.texPoints[1].y)*canvasTex.height);
 				for (let i = 2; i < this.texPoints.length; i++) {
-					ctx.lineTo(this.texPoints[i].x*canvas.width, (1-this.texPoints[i].y)*canvas.height);
+					ctx.lineTo(this.texPoints[i].x*canvasTex.width, (1-this.texPoints[i].y)*canvasTex.height);
 				}
 			    ctx.stroke();
 			    ctx.fill();
 
+				ctxMet.lineWidth = 0;
+				ctxMet.fillStyle = colorMet;  // Une couleur plus sombre
+			    ctxMet.beginPath();
+			    ctxMet.moveTo(this.texPoints[1].x*canvasTex.width, (1-this.texPoints[1].y)*canvasTex.height);
+				for (let i = 2; i < this.texPoints.length; i++) {
+					ctxMet.lineTo(this.texPoints[i].x*canvasTex.width, (1-this.texPoints[i].y)*canvasTex.height);
+				}
+			    ctxMet.fill();
+
 				ctx.strokeStyle = "rgb(0,0,255)";  // Une couleur plus sombre
-			    for (let i = 0; i< 6; i++) {
-			    	if (this.waterFlow[i]>0) {
-			    		let i1 = i+1;
-			    		let i2 = i == 5 ? 1 : i+2;
-			    		let x = ( this.texPoints[i1].x + this.texPoints[i2].x ) / 2;
-			    		let y = ( this.texPoints[i1].y + this.texPoints[i2].y ) / 2;
-						ctx.lineWidth = 2+(this.waterFlow[i]/2);
-					    ctx.beginPath();
-					    ctx.moveTo(this.texPoints[0].x*canvas.width, (1-this.texPoints[0].y)*canvas.height);
-					    ctx.lineTo(x*canvas.width, (1-y)*canvas.height);
-					    ctx.stroke();
-			    	}
-			    }
+				ctxMet.strokeStyle = "rgb(0,75,230)";  // Une couleur plus sombre
+				if (this.waterFlowOut >= 0) {
+					let i1 = this.waterFlowOut+1;
+					let i2 = this.waterFlowOut == 5 ? 1 : this.waterFlowOut+2;
+					let outX = ( this.texPoints[i1].x + this.texPoints[i2].x ) / 2;
+					let outY = ( this.texPoints[i1].y + this.texPoints[i2].y ) / 2;
+				    for (let i = 0; i< 6; i++) {
+				    	if (this.waterFlow[i]>0 && i != this.waterFlowOut) {
+				    		let i1 = i+1;
+				    		let i2 = i == 5 ? 1 : i+2;
+				    		let x = ( this.texPoints[i1].x + this.texPoints[i2].x ) / 2;
+				    		let y = ( this.texPoints[i1].y + this.texPoints[i2].y ) / 2;
+							ctx.lineWidth = 2+(this.waterFlow[i]/2);
+						    ctx.beginPath();
+						    ctx.moveTo(x*canvasTex.width, (1-y)*canvasTex.height);
+						    ctx.quadraticCurveTo(this.texPoints[0].x*canvasTex.width, (1-this.texPoints[0].y)*canvasTex.height, outX*canvasTex.width, (1-outY)*canvasTex.height);
+						    ctx.stroke();
+							ctxMet.lineWidth = 2+(this.waterFlow[i]/2);
+						    ctxMet.beginPath();
+						    ctxMet.moveTo(x*canvasTex.width, (1-y)*canvasTex.height);
+						    ctxMet.quadraticCurveTo(this.texPoints[0].x*canvasTex.width, (1-this.texPoints[0].y)*canvasTex.height, outX*canvasTex.width, (1-outY)*canvasTex.height);
+						    ctxMet.stroke();
+				    	}
+				    }
+
+				}
 
         	}
         }
@@ -98,7 +121,7 @@
 
         const cases = {};
 
-        const sunlight = new THREE.DirectionalLight(0xffffff, 1);
+        const sunlight = new THREE.DirectionalLight(0xffffCC, 1);
         sunlight.position.set(0, 1, 0);
         sunlight.castShadows = true;
         scene.add(sunlight);
@@ -118,8 +141,8 @@
         // Animation de la scène
         function animate() {
             requestAnimationFrame(animate);
-            sunlight.position.set(Math.sin(hour), Math.cos(hour), 0);
-            moonlight.position.set(Math.sin(hour+Math.PI), Math.cos(hour+Math.PI), 0);
+            sunlight.position.set(300*Math.sin(hour), 300*Math.cos(hour), 0);
+            moonlight.position.set(300*Math.sin(hour+Math.PI), 300*Math.cos(hour+Math.PI), 0);
             hour += 0.0005;
             controls.update();  // Mettre à jour les contrôles à chaque frame
             renderer.render(scene, camera);
@@ -134,18 +157,26 @@
         });
 
 
-		const canvas = document.createElement('canvas');
+		const canvasTex = document.createElement('canvas');
+		const canvasMet = document.createElement('canvas');
 
 		function init_data(data) {
 	        let rows = data.rows;  // Nombre de rangées
 	        let cols = data.cols;  // Nombre de colonnes
 
-			canvas.width = 50*cols;  // Vous pouvez ajuster la taille
-			canvas.height = 50*rows;
+			canvasTex.width = 50*cols;  // Vous pouvez ajuster la taille
+			canvasTex.height = 50*rows;
 			//canvas.width = 200;
 			//canvas.height = 50;
-			const ctx = canvas.getContext('2d');
-			ctx.lineCap = "round";
+			const ctxTex = canvasTex.getContext('2d');
+			ctxTex.lineCap = "round";
+
+			canvasMet.width = 50*cols;  // Vous pouvez ajuster la taille
+			canvasMet.height = 50*rows;
+			//canvas.width = 200;
+			//canvas.height = 50;
+			const ctxMet = canvasMet.getContext('2d');
+			ctxMet.lineCap = "round";
 
 	        // Ajout d'une lumière directionnelle
 
@@ -161,24 +192,28 @@
 			        c.points = d.points;
 			        c.background = d.background;
 			        c.waterFlow = d.waterFlow;
+			        c.waterFlowOut = d.waterFlowOut;
 			        for (let i = 0; i< c.points.length; i++) {
 			        	d.points[i] = new THREE.Vector3(c.points[i].x, c.points[i].z*8, c.points[i].y);
 			        }
 			        c.calcPoints(rows, cols);
 			        c.addTriangles(ground, texGround);
-			        c.drawTexture(ctx);
+			        c.drawTexture(ctxTex, ctxMet);
 	            }
 	        }
 
-			const texture = new THREE.CanvasTexture(canvas);
+			const texture = new THREE.CanvasTexture(canvasTex);
+			const textureMetalness = new THREE.CanvasTexture(canvasMet);
 
 			//document.body.appendChild(canvas);
 
 			// 3. Créer un matériau à partir de la texture
 			const texMaterial = new THREE.MeshStandardMaterial({
 			    map: texture,
-			    roughness :1,
-			    metalness :0,
+			    roughness : 1,
+			    metalness : 1,	
+			    roughnessMap :textureMetalness,
+			    metalnessMap :textureMetalness,
 			    side: THREE.DoubleSide  // Afficher les deux faces
 			});
 
@@ -199,6 +234,7 @@
 	        controls.target.y = 0;
 	        controls.target.z = 0.8660254037844386*rows/2;
 
+	       // document.body.appendChild(canvasMet);
 		}
 
 
