@@ -21,7 +21,7 @@
         		this.waterFlow = [];
         		this.x = x;
         		this.y = y;
-        		this.z = z*10;
+        		this.z = z;
 
         		if (!cases[x]) cases[x] = {};
         		cases[x][y] = this;
@@ -135,8 +135,17 @@
         camera.position.y = 20;
         camera.position.z = 0;
 
+	 	const oceanGeometry = new THREE.PlaneGeometry(5000, 5000);
+        const oceanMaterial = new THREE.MeshStandardMaterial({ color: "rgb(50,150,200)", side: THREE.DoubleSide, metalness: 0.9, roughness:0.3 });
+        const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
+        ocean.rotation.x = -Math.PI / 2; // Faire pivoter le plan pour qu'il soit horizontal
+        ocean.position.y = -0.1;
+
+        scene.add(ocean);
+
         // Ajout d'OrbitControls pour permettre le mouvement de la caméra avec la souris
         const controls = new OrbitControls(camera, renderer.domElement);
+        controls.minPolarAngle = 0;
         var hour = 0;
         // Animation de la scène
         function animate() {
@@ -144,6 +153,8 @@
             sunlight.position.set(300*Math.sin(hour), 300*Math.cos(hour), 0);
             moonlight.position.set(300*Math.sin(hour+Math.PI), 300*Math.cos(hour+Math.PI), 0);
             hour += 0.0005;
+	        camera.position.y = Math.max(0, camera.position.y);
+	        controls.target.y = Math.max(0, controls.target.y);
             controls.update();  // Mettre à jour les contrôles à chaque frame
             renderer.render(scene, camera);
         }
@@ -223,9 +234,9 @@
 			const t = new THREE.BufferGeometry().setFromPoints(ground);
 			t.setAttribute('uv', new THREE.Float32BufferAttribute(texGround.flat(), 2));
 			t.computeVertexNormals();
-
 	        const m = new THREE.Mesh(t, mat);
 	        scene.add(m);
+			m.position.y= -0.15*8;
 
 	        camera.position.x = 0.8660254037844386*cols/2;
 	        camera.position.y = 20;
