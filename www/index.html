@@ -23,6 +23,8 @@
         		this.y = y;
         		this.z = z;
 
+        		this.isSelected = false;
+
         		if (!cases[x]) cases[x] = {};
         		cases[x][y] = this;
         		this.background = "sea";
@@ -52,7 +54,7 @@
         		}
         	}
 
-        	drawTexture(ctx, ctxMet) {
+        	drawTexture() {
         		let color = "rgb(0,255,0)";
         		let colorMet = "rgb(0,255,127)";
         		if (this.background == "sea") {color = "rgb(50,150,200)"; colorMet = "rgb(0,75,230)";}
@@ -61,16 +63,18 @@
         		if (this.background == "rock") {color = "rgb(100,100,100)";}
         		if (this.background == "snow") {color = "rgb(230,255,255)";colorMet = "rgb(0,192,230)";}
         		if (this.background == "forest") {color = "rgb(0,127,0)";}
-				ctx.strokeStyle = "rgb(0,0,0)";  // Une couleur plus sombre
-				ctx.lineWidth = 3;
-				ctx.fillStyle = color;  // Une couleur plus sombre
-			    ctx.beginPath();
-			    ctx.moveTo(this.texPoints[1].x*canvasTex.width, (1-this.texPoints[1].y)*canvasTex.height);
+				ctxTex.strokeStyle = "rgb(0,0,0)";  // Une couleur plus sombre
+				if (this.isSelected) ctxTex.strokeStyle = "rgb(255,255,255)";
+				ctxTex.lineWidth = 3;
+				ctxTex.fillStyle = color;  // Une couleur plus sombre
+			    ctxTex.beginPath();
+			    ctxTex.moveTo(this.texPoints[1].x*canvasTex.width, (1-this.texPoints[1].y)*canvasTex.height);
 				for (let i = 2; i < this.texPoints.length; i++) {
-					ctx.lineTo(this.texPoints[i].x*canvasTex.width, (1-this.texPoints[i].y)*canvasTex.height);
+					ctxTex.lineTo(this.texPoints[i].x*canvasTex.width, (1-this.texPoints[i].y)*canvasTex.height);
 				}
-			    ctx.stroke();
-			    ctx.fill();
+				ctxTex.closePath();
+			    ctxTex.stroke();
+			    ctxTex.fill();
 
 				ctxMet.lineWidth = 0;
 				ctxMet.fillStyle = colorMet;  // Une couleur plus sombre
@@ -81,7 +85,22 @@
 				}
 			    ctxMet.fill();
 
-				ctx.strokeStyle = "rgb(0,0,255)";  // Une couleur plus sombre
+			    let id = this.x + (this.y * cols);
+			    let r = id % 256;
+			    id = Math.floor(id/256);
+			    let g = id % 256;
+			    id = Math.floor(id/256);
+			    let b = id % 256;
+			    ctxClic.fillStyle = "rgb("+r+", "+g+", "+b+")";
+				ctxClic.lineWidth = 0;
+				ctxClic.beginPath();
+			    ctxClic.moveTo(this.texPoints[1].x*canvasTex.width, (1-this.texPoints[1].y)*canvasTex.height);
+				for (let i = 2; i < this.texPoints.length; i++) {
+					ctxClic.lineTo(this.texPoints[i].x*canvasTex.width, (1-this.texPoints[i].y)*canvasTex.height);
+				}
+			    ctxClic.fill();
+
+				ctxTex.strokeStyle = "rgb(0,0,255)";  // Une couleur plus sombre
 				ctxMet.strokeStyle = "rgb(0,75,230)";  // Une couleur plus sombre
 				if (this.waterFlowOut >= 0) {
 					let i1 = this.waterFlowOut+1;
@@ -94,11 +113,11 @@
 				    		let i2 = i == 5 ? 1 : i+2;
 				    		let x = ( this.texPoints[i1].x + this.texPoints[i2].x ) / 2;
 				    		let y = ( this.texPoints[i1].y + this.texPoints[i2].y ) / 2;
-							ctx.lineWidth = 2+(this.waterFlow[i]/2);
-						    ctx.beginPath();
-						    ctx.moveTo(x*canvasTex.width, (1-y)*canvasTex.height);
-						    ctx.quadraticCurveTo(this.texPoints[0].x*canvasTex.width, (1-this.texPoints[0].y)*canvasTex.height, outX*canvasTex.width, (1-outY)*canvasTex.height);
-						    ctx.stroke();
+							ctxTex.lineWidth = 2+(this.waterFlow[i]/2);
+						    ctxTex.beginPath();
+						    ctxTex.moveTo(x*canvasTex.width, (1-y)*canvasTex.height);
+						    ctxTex.quadraticCurveTo(this.texPoints[0].x*canvasTex.width, (1-this.texPoints[0].y)*canvasTex.height, outX*canvasTex.width, (1-outY)*canvasTex.height);
+						    ctxTex.stroke();
 							ctxMet.lineWidth = 2+(this.waterFlow[i]/2);
 						    ctxMet.beginPath();
 						    ctxMet.moveTo(x*canvasTex.width, (1-y)*canvasTex.height);
@@ -143,6 +162,9 @@
 
         scene.add(ocean);
 
+		const raycaster = new THREE.Raycaster();
+		const mouse = new THREE.Vector2();
+
         // Ajout d'OrbitControls pour permettre le mouvement de la caméra avec la souris
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.minPolarAngle = 0;
@@ -170,24 +192,47 @@
 
 		const canvasTex = document.createElement('canvas');
 		const canvasMet = document.createElement('canvas');
+		const canvasClic = document.createElement('canvas');
+
+		const ctxTex = canvasTex.getContext('2d');
+		const ctxMet = canvasMet.getContext('2d');
+		const ctxClic = canvasClic.getContext('2d');
+
+		const texture = new THREE.CanvasTexture(canvasTex);
+		const textureMetalness = new THREE.CanvasTexture(canvasMet);
+
+		let cols;
+		let rows;
+		let selectedCase = false;
+
+		function selectCase(x,y) {
+			if (selectedCase) {
+				selectedCase.isSelected = false;
+				selectedCase.drawTexture();
+			}
+			if (x != undefined) {
+				selectedCase = cases[x][y];
+				selectedCase.isSelected = true;
+				selectedCase.drawTexture();
+			}
+			texture.needsUpdate = true;
+		}
 
 		function init_data(data) {
-	        let rows = data.rows;  // Nombre de rangées
-	        let cols = data.cols;  // Nombre de colonnes
+	        rows = data.rows;  // Nombre de rangées
+	        cols = data.cols;  // Nombre de colonnes
 
-			canvasTex.width = 50*cols;  // Vous pouvez ajuster la taille
-			canvasTex.height = 50*rows;
-			//canvas.width = 200;
-			//canvas.height = 50;
-			const ctxTex = canvasTex.getContext('2d');
+			canvasTex.width = 20*cols;  // Vous pouvez ajuster la taille
+			canvasTex.height = 20*rows;
 			ctxTex.lineCap = "round";
 
-			canvasMet.width = 50*cols;  // Vous pouvez ajuster la taille
-			canvasMet.height = 50*rows;
-			//canvas.width = 200;
-			//canvas.height = 50;
-			const ctxMet = canvasMet.getContext('2d');
+			canvasMet.width = 20*cols;  // Vous pouvez ajuster la taille
+			canvasMet.height = 20*rows;
 			ctxMet.lineCap = "round";
+
+			canvasClic.width = 20*cols;  // Vous pouvez ajuster la taille
+			canvasClic.height = 20*rows;
+			ctxClic.lineCap = "round";
 
 	        // Ajout d'une lumière directionnelle
 
@@ -209,14 +254,11 @@
 			        }
 			        c.calcPoints(rows, cols);
 			        c.addTriangles(ground, texGround);
-			        c.drawTexture(ctxTex, ctxMet);
+			        c.drawTexture();
 	            }
 	        }
 
-			const texture = new THREE.CanvasTexture(canvasTex);
-			const textureMetalness = new THREE.CanvasTexture(canvasMet);
-
-			//document.body.appendChild(canvas);
+			document.body.appendChild(canvasClic);
 
 			// 3. Créer un matériau à partir de la texture
 			const texMaterial = new THREE.MeshStandardMaterial({
@@ -249,6 +291,30 @@
 		}
 
 
+
+		window.addEventListener('click', (event) => {
+		    // Convertir les coordonnées de la souris en coordonnées normalisées
+		    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+		    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+		    // 3. Lancer le raycast
+		    raycaster.setFromCamera(mouse, camera);
+
+		    // 4. Vérifier les intersections
+		    const intersects = raycaster.intersectObjects(scene.children);
+
+		    if (intersects.length > 0) {
+		        // Le premier objet intersecté est celui qui a été cliqué
+		        const intersectedObject = intersects[0].object;
+		        let x = Math.round(intersects[0].uv.x*canvasClic.width);
+		        let y = Math.round((1-intersects[0].uv.y)*canvasClic.height);
+		        var p = ctxClic.getImageData(x, y, 1, 1).data; 
+		        var id = p[0] + (256*p[1]) + (256*256*p[2]);
+		        x = id%cols;
+		        y = Math.floor(id/cols);
+		        selectCase(x, y);
+		    }
+		});
 
 		const socket = new WebSocket('ws://127.0.0.1:8080');
 
