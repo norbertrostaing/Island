@@ -159,7 +159,7 @@ class Case {
         this.seaIndex = -1;
 
         this.isWaterSource = false;
-        if (this.z > 0.7 && this.z < 0.8 && Math.random(1) > 0.85) this.isWaterSource = true;
+        if (this.z > 0.5 && this.z < 0.8 && Math.random(1) > 0.85) this.isWaterSource = true;
 
         this.isBorderSea = false;
         this.isForest = false;
@@ -199,19 +199,31 @@ class Case {
         let deltaX = lineHeightRatio/2.0;
         let deltaY = 0.5/2.0;
 
-        let zM;
+        let zA, zB, zM;
         this.points[0] = {"x":centerX,"y":centerY,"z":this.z};
-        zM = (this.z+getAltitude(this.x+xUp, this.y+1)+getAltitude(this.x+xDown, this.y+1))/3.0;
+        zA = getAltitude(this.x+xUp, this.y+1);
+        zB = getAltitude(this.x+xDown, this.y+1);
+        zM = zA == zSea || zB == zSea || this.z == zSea ? zSea : (this.z+ zA + zB)/3.0;
         this.points[1] = {"x":centerX,"y":centerY+0.5,"z":zM};
-        zM = (this.z+getAltitude(this.x+1, this.y)+getAltitude(this.x+xUp, this.y+1))/3.0;
+        zA = getAltitude(this.x+1, this.y);
+        zB = getAltitude(this.x+xUp, this.y+1);
+        zM = zA == zSea || zB == zSea || this.z == zSea ? zSea : (this.z+ zA + zB)/3.0;
         this.points[2] = {"x":centerX+deltaX,"y":centerY+deltaY,"z":zM};
-        zM = (this.z+getAltitude(this.x+1, this.y)+getAltitude(this.x+xUp, this.y-1))/3.0;
+        zA = getAltitude(this.x+1, this.y);
+        zB = getAltitude(this.x+xUp, this.y-1);
+        zM = zA == zSea || zB == zSea || this.z == zSea ? zSea : (this.z+ zA + zB)/3.0;
         this.points[3] = {"x":centerX+deltaX,"y":centerY-deltaY,"z":zM};
-        zM = (this.z+getAltitude(this.x+xUp, this.y-1)+getAltitude(this.x+xDown, this.y-1))/3.0;
+        zA = getAltitude(this.x+xUp, this.y-1);
+        zB = getAltitude(this.x+xDown, this.y-1);
+        zM = zA == zSea || zB == zSea || this.z == zSea ? zSea : (this.z+ zA + zB)/3.0;
         this.points[4] = {"x":centerX,"y":centerY-0.5,"z":zM};
-        zM = (this.z+getAltitude(this.x-1, this.y)+getAltitude(this.x+xDown, this.y-1))/3.0;
+        zA = getAltitude(this.x-1, this.y);
+        zB = getAltitude(this.x+xDown, this.y-1);
+        zM = zA == zSea || zB == zSea || this.z == zSea ? zSea : (this.z+ zA + zB)/3.0;
         this.points[5] = {"x":centerX-deltaX,"y":centerY-deltaY,"z":zM};
-        zM = (this.z+getAltitude(this.x-1, this.y)+getAltitude(this.x+xDown, this.y+1))/3.0;
+        zA = getAltitude(this.x-1, this.y);
+        zB = getAltitude(this.x+xDown, this.y+1);
+        zM = zA == zSea || zB == zSea || this.z == zSea ? zSea : (this.z+ zA + zB)/3.0;
         this.points[6] = {"x":centerX-deltaX,"y":centerY+deltaY,"z":zM};
 
         this.isSea = this.z <= zSea;
@@ -252,7 +264,7 @@ class Case {
                 currentCase = lowestCase;
             } else {
                 //currentCase.checkIsHole();
-                currentCase.z += 0.01;
+                currentCase.z += Math.random()*0.02;
                 currentCase.calcPoints();
                 for (let c of currentCase.neighbors) {
                     if (c) {

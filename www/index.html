@@ -113,12 +113,12 @@
 				    		let i2 = i == 5 ? 1 : i+2;
 				    		let x = ( this.texPoints[i1].x + this.texPoints[i2].x ) / 2;
 				    		let y = ( this.texPoints[i1].y + this.texPoints[i2].y ) / 2;
-							ctxTex.lineWidth = 2+(this.waterFlow[i]/2);
+							ctxTex.lineWidth = Math.min(1+(this.waterFlow[i]/4),5);
 						    ctxTex.beginPath();
 						    ctxTex.moveTo(x*canvasTex.width, (1-y)*canvasTex.height);
 						    ctxTex.quadraticCurveTo(this.texPoints[0].x*canvasTex.width, (1-this.texPoints[0].y)*canvasTex.height, outX*canvasTex.width, (1-outY)*canvasTex.height);
 						    ctxTex.stroke();
-							ctxMet.lineWidth = 2+(this.waterFlow[i]/2);
+							ctxMet.lineWidth = Math.min(1+(this.waterFlow[i]/4),5);
 						    ctxMet.beginPath();
 						    ctxMet.moveTo(x*canvasTex.width, (1-y)*canvasTex.height);
 						    ctxMet.quadraticCurveTo(this.texPoints[0].x*canvasTex.width, (1-this.texPoints[0].y)*canvasTex.height, outX*canvasTex.width, (1-outY)*canvasTex.height);
@@ -174,7 +174,7 @@
             requestAnimationFrame(animate);
             sunlight.position.set(300*Math.sin(hour), 300*Math.cos(hour), 0);
             moonlight.position.set(300*Math.sin(hour+Math.PI), 300*Math.cos(hour+Math.PI), 0);
-            hour += 0.0005;
+            //hour += 0.0005;
 	        camera.position.y = Math.max(0, camera.position.y);
 	        controls.target.y = Math.max(0, controls.target.y);
             controls.update();  // Mettre à jour les contrôles à chaque frame

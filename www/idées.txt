@@ -1,0 +1,47 @@
+chaque case représente un territoire (a peu près la taille d'un quartier de ville)
+chaque terrain a plusieurs (6?, 12?) emplacements de construction
+chaque emplacement de construction permet de modifier les caracteristiques de la case
+constructions possibles : 
+	- habitation
+	- agriculture
+	- école
+	- place du marché
+	- quartier artisan
+	- quartier santé
+lorsqu'une construction est présente plusieurs fois, les effets sont ajoutés + bonus
+
+chaque case et construction a une portée et des effets (positifs ou negatifs) sur les cases à portée, par exemple : 
+	- les quartiers d'habitation font augmenter la population
+	- Les quartiers d'agriculture fournissent de la nourriture dans les cases a portée
+	- les quartiers école améliorent l'éducation des habitation a portée
+	- les quartiers santé améliorent la santé (et le taux de reproduction de la population) des cases a portée
+
+La main d'oeuvre est représentée par le nombre d'habitants disponible pour travailler 
+chaque construction a besoin de main d'oeuvre pour fonctionner a chaque tour
+pour construire un quartier ou des aménagements, on doit avoir de la main d'oeuvre disponible
+
+En plus des quartier, les cases peuvent avoir des infrastructures (routes, eau, transports en commun, electricité...) qui permettent d'agrandir la porté des effets des cases 
+
+
+
+case :
+- Population
+	- population (nombre)
+	- croissance demographique (ratio par tour)
+	- moral (influe sur la croissance demographique)
+	- main d'oeuvre disponible (nombre)
+- nourriture
+	- production de nourriture (sur case et dispo des alentours)
+	- consommation de nourriture
+	- nourriture finale (excedent / deficit) => influe sur croissance demographique, santé et moral ?
+- santé
+	- santé de la population => influe sur croissance demographique
+- habitations
+	- habitations disponibles (nombre)
+	- surpopulation / sous population => influe sur le moral
+- construction
+	- construction en cours (en fonction de la production de materiaux a proximité)
+- attrait 
+	- attrait de la case => influe sur le bien être de la population, peut être modifié si activitées industrielles autour
+- loisirs
+	- quantité de loisirs disponibles pour la population
