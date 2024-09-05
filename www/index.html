@@ -85,7 +85,7 @@
 				}
 			    ctxMet.fill();
 
-			    let id = this.x + (this.y * cols);
+			    let id = (this.x + (this.y * cols))*10;
 			    let r = id % 256;
 			    id = Math.floor(id/256);
 			    let g = id % 256;
@@ -174,7 +174,7 @@
             requestAnimationFrame(animate);
             sunlight.position.set(300*Math.sin(hour), 300*Math.cos(hour), 0);
             moonlight.position.set(300*Math.sin(hour+Math.PI), 300*Math.cos(hour+Math.PI), 0);
-            //hour += 0.0005;
+            hour += 0.005;
 	        camera.position.y = Math.max(0, camera.position.y);
 	        controls.target.y = Math.max(0, controls.target.y);
             controls.update();  // Mettre à jour les contrôles à chaque frame
@@ -258,6 +258,7 @@
 	            }
 	        }
 
+			document.body.appendChild(canvasTex);
 			document.body.appendChild(canvasClic);
 
 			// 3. Créer un matériau à partir de la texture
@@ -310,6 +311,7 @@
 		        let y = Math.round((1-intersects[0].uv.y)*canvasClic.height);
 		        var p = ctxClic.getImageData(x, y, 1, 1).data; 
 		        var id = p[0] + (256*p[1]) + (256*256*p[2]);
+		        id = Math.floor(id /10);
 		        x = id%cols;
 		        y = Math.floor(id/cols);
 		        selectCase(x, y);
